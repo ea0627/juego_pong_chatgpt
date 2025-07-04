@@ -1,3 +1,14 @@
+let dificultad = "medio"; // por defecto
+let velocidadBasePelota = 5;
+let errorMin = 10;
+let errorMax = 50;
+
+
+// Variebles del juego
+let juegoTerminado = false;
+let mensajeFinal = "";
+
+
 // Variables de la pelota
 let pelotaX = 300;
 let pelotaY = 200;
@@ -30,8 +41,31 @@ function preload() {
   sonidoGol = loadSound('/gol.wav'); // sonido para cualquier gol
 }
 
+function establecerDificultad(nivel) {
+  dificultad = nivel;
+
+  if (nivel === "facil") {
+    velocidadBasePelota = 4;
+    errorMin = 30;
+    errorMax = 60;
+  } else if (nivel === "medio") {
+    velocidadBasePelota = 5;
+    errorMin = 15;
+    errorMax = 40;
+  } else if (nivel === "dificil") {
+    velocidadBasePelota = 6;
+    errorMin = 5;
+    errorMax = 20;
+  }
+
+  // Reinicia pelota con la nueva velocidad
+  velocidadPelotaX = velocidadBasePelota * (Math.random() < 0.5 ? -1 : 1);
+  velocidadPelotaY = velocidadBasePelota * (Math.random() < 0.5 ? -1 : 1);
+}
+
 function setup() {
   createCanvas(600, 400);
+  establecerDificultad("medio");
 }
 
 function draw() {
@@ -50,6 +84,16 @@ function draw() {
   verificarColisionRaqueta(cpuX, cpuY);
 
   mostrarPuntuacion();
+
+  if (juegoTerminado) {
+  fill(mensajeFinal === "¡Ganaste!" ? "lime" : "red");
+  textSize(48);
+  textAlign(CENTER, CENTER);
+  text(mensajeFinal, width / 2, height / 2);
+  textSize(20);
+  text("Presiona R para reiniciar", width / 2, height / 2 + 50);
+  noLoop(); // Detiene el juego
+    }
 }
 
 function dibujarPelota() {
@@ -63,29 +107,40 @@ function moverPelota() {
 }
 
 function verificarBordes() {
-  // Rebote en el techo y el suelo
   if (pelotaY - radio < 0 || pelotaY + radio > height) {
     velocidadPelotaY *= -1;
   }
 
-  // Gol del CPU
   if (pelotaX - radio < 0) {
     puntosCPU++;
     if (sonidoGol && sonidoGol.isLoaded()) {
-      sonidoGol.play(); // Gol de la CPU
+      sonidoGol.play();
     }
     reiniciarPelota();
   }
 
-  // Gol del jugador
   if (pelotaX + radio > width) {
     puntosJugador++;
     if (sonidoGol && sonidoGol.isLoaded()) {
-      sonidoGol.play(); // Gol del jugador
+      sonidoGol.play();
     }
+    mostrarGol = true;
+    tiempoGol = millis();
     reiniciarPelota();
   }
+
+  // Verifica victoria o derrota
+  if (puntosJugador >= 5) {
+    juegoTerminado = true;
+    mensajeFinal = "¡Ganaste!";
+  }
+
+  if (puntosCPU >= 5) {
+    juegoTerminado = true;
+    mensajeFinal = "Perdiste...";
+  }
 }
+
 
 function dibujarRaquetas() {
   fill(255);
@@ -115,12 +170,12 @@ function moverRaquetaCPU() {
     cpuY -= velocidadCPU;
   }
 
-  // Cambiar el error cada segundo
+  // Genera error dinámico cada segundo (60 frames aprox)
   if (frameCount % 60 === 0) {
-    errorCPU = random(10, 50);
+    errorCPU = random(errorMin, errorMax);
   }
 
-  // Limitar dentro del canvas
+  // Evita que la raqueta se salga del canvas
   cpuY = constrain(cpuY, 0, height - altoRaqueta);
 }
 
@@ -150,4 +205,52 @@ function mostrarPuntuacion() {
   textSize(20);
   textAlign(CENTER, TOP);
   text(`${puntosJugador} - ${puntosCPU}`, width / 2, 10);
+}
+
+function establecerDificultad(nivel) {
+  dificultad = nivel;
+
+  if (nivel === "facil") {
+    velocidadBasePelota = 4;
+    errorMin = 30;
+    errorMax = 60;
+  } else if (nivel === "medio") {
+    velocidadBasePelota = 5;
+    errorMin = 15;
+    errorMax = 40;
+  } else if (nivel === "dificil") {
+    velocidadBasePelota = 6;
+    errorMin = 5;
+    errorMax = 20;
+  }
+
+  // Reiniciar velocidades con nueva dificultad
+  velocidadPelotaX = velocidadBasePelota * (Math.random() < 0.5 ? -1 : 1);
+  velocidadPelotaY = velocidadBasePelota * (Math.random() < 0.5 ? -1 : 1);
+}
+
+
+function keyPressed() {
+  if (juegoTerminado && (key === 'r' || key === 'R')) {
+    puntosJugador = 0;
+    puntosCPU = 0;
+    juegoTerminado = false;
+    mensajeFinal = "";
+    loop();
+    reiniciarPelota();
+  }
+
+  // Cambiar dificultad en vivo
+  if (key === '1') {
+    establecerDificultad("facil");
+    console.log("Dificultad: fácil");
+  } else if (key === '2') {
+    establecerDificultad("medio");
+    console.log("Dificultad: medio");
+  } else if (key === '3') {
+    establecerDificultad("dificil");
+    console.log("Dificultad: difícil");
+  }
+
+  console.log("Tecla presionada:", key);
 }
