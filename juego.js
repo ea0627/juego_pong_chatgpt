@@ -1,3 +1,8 @@
+let enMenu = true; // Arrancamos en menú
+
+let fondoCancha;
+let imagenPelota;
+
 let dificultad = "medio"; // por defecto
 let velocidadBasePelota = 5;
 let errorMin = 10;
@@ -37,8 +42,10 @@ let sonidoRebote;
 let sonidoGolJugador;
 
 function preload() {
-  sonidoRebote = loadSound('./point.wav');
+  sonidoRebote = loadSound('/point.wav');
   sonidoGol = loadSound('/gol.wav'); // sonido para cualquier gol
+  fondoCancha = loadImage('/fondo.jpg'); // asegúrate del nombre
+  imagenPelota = loadImage('/pelota.jpg'); // la imagen realista de pelota
 }
 
 function establecerDificultad(nivel) {
@@ -65,40 +72,52 @@ function establecerDificultad(nivel) {
 
 function setup() {
   createCanvas(600, 400);
-  establecerDificultad("medio");
+    noLoop();
 }
 
 function draw() {
-  background(0);
+    image(fondoCancha, 0, 0, width, height);
 
-  // Dibujo y lógica
-  dibujarPelota();
-  moverPelota();
-  verificarBordes();
+    // Capa semitransparente para dar contraste
+    fill(0, 0, 0, 80); // negro con opacidad
+    noStroke();
+    rect(0, 0, width, height);
+    background(0);
 
-  dibujarRaquetas();
-  moverRaquetaJugador();
-  moverRaquetaCPU();
+  if (enMenu) {
+    textSize(32);
+    fill(255);
+    textAlign(CENTER, CENTER);
+    text("Elige dificultad para comenzar:\n\n1 - Fácil\n2 - Medio\n3 - Difícil", width/2, height/2);
+  } else {
+    // Dibujo y lógica normal del juego
+    dibujarPelota();
+    moverPelota();
+    verificarBordes();
 
-  verificarColisionRaqueta(jugadorX, jugadorY);
-  verificarColisionRaqueta(cpuX, cpuY);
+    dibujarRaquetas();
+    moverRaquetaJugador();
+    moverRaquetaCPU();
 
-  mostrarPuntuacion();
+    verificarColisionRaqueta(jugadorX, jugadorY);
+    verificarColisionRaqueta(cpuX, cpuY);
 
-  if (juegoTerminado) {
-  fill(mensajeFinal === "¡Ganaste!" ? "lime" : "red");
-  textSize(48);
-  textAlign(CENTER, CENTER);
-  text(mensajeFinal, width / 2, height / 2);
-  textSize(20);
-  text("Presiona R para reiniciar", width / 2, height / 2 + 50);
-  noLoop(); // Detiene el juego
+    mostrarPuntuacion();
+
+    if (juegoTerminado) {
+      fill(mensajeFinal === "¡Ganaste!" ? "lime" : "red");
+      textSize(48);
+      textAlign(CENTER, CENTER);
+      text(mensajeFinal, width / 2, height / 2);
+      textSize(20);
+      text("Presiona R para reiniciar", width / 2, height / 2 + 50);
+      noLoop();
     }
+  }
 }
 
 function dibujarPelota() {
-  fill(255);
-  circle(pelotaX, pelotaY, diametro);
+    image(imagenPelota, pelotaX - radio, pelotaY - radio, diametro, diametro);
 }
 
 function moverPelota() {
@@ -201,11 +220,30 @@ function reiniciarPelota() {
 }
 
 function mostrarPuntuacion() {
-  fill(255);
+  // Color según dificultad
+  let colorDificultad;
+  if (dificultad === "facil") {
+    colorDificultad = color(0, 255, 0); // verde
+  } else if (dificultad === "medio") {
+    colorDificultad = color(255, 255, 0); // amarillo
+  } else if (dificultad === "dificil") {
+    colorDificultad = color(255, 0, 0); // rojo
+  } else {
+    colorDificultad = color(255); // blanco por defecto
+  }
+
+  // Mostrar dificultad en color
+  fill(colorDificultad);
   textSize(20);
+  textAlign(LEFT, TOP);
+  text(`Dificultad: ${dificultad.toUpperCase()}`, 10, 10);
+
+  // Mostrar puntuación en blanco centrado
+  fill(255);
   textAlign(CENTER, TOP);
   text(`${puntosJugador} - ${puntosCPU}`, width / 2, 10);
 }
+
 
 function establecerDificultad(nivel) {
   dificultad = nivel;
@@ -231,25 +269,29 @@ function establecerDificultad(nivel) {
 
 
 function keyPressed() {
-  if (juegoTerminado && (key === 'r' || key === 'R')) {
-    puntosJugador = 0;
-    puntosCPU = 0;
-    juegoTerminado = false;
-    mensajeFinal = "";
-    loop();
-    reiniciarPelota();
-  }
-
-  // Cambiar dificultad en vivo
-  if (key === '1') {
-    establecerDificultad("facil");
-    console.log("Dificultad: fácil");
-  } else if (key === '2') {
-    establecerDificultad("medio");
-    console.log("Dificultad: medio");
-  } else if (key === '3') {
-    establecerDificultad("dificil");
-    console.log("Dificultad: difícil");
+  if (enMenu) {
+    if (key === '1') {
+      establecerDificultad("facil");
+      enMenu = false;
+      loop();
+    } else if (key === '2') {
+      establecerDificultad("medio");
+      enMenu = false;
+      loop();
+    } else if (key === '3') {
+      establecerDificultad("dificil");
+      enMenu = false;
+      loop();
+    }
+  } else {
+    if (juegoTerminado && (key === 'r' || key === 'R')) {
+      puntosJugador = 0;
+      puntosCPU = 0;
+      juegoTerminado = false;
+      mensajeFinal = "";
+      reiniciarPelota();
+      loop();
+    }
   }
 
   console.log("Tecla presionada:", key);
