@@ -19,7 +19,7 @@ let pelotaX = 300;
 let pelotaY = 200;
 let velocidadPelotaX = 5;
 let velocidadPelotaY = 5;
-let diametro = 20;
+let diametro = 40;
 let radio = diametro / 2;
 
 // Raquetas
@@ -42,28 +42,32 @@ let sonidoRebote;
 let sonidoGolJugador;
 
 function preload() {
-  sonidoRebote = loadSound('/point.wav');
-  sonidoGol = loadSound('/gol.wav'); // sonido para cualquier gol
-  fondoCancha = loadImage('/fondo.jpg'); // asegúrate del nombre
-  imagenPelota = loadImage('/pelota.jpg'); // la imagen realista de pelota
+    // Cargar imágenes
+    fondoCancha = loadImage("fondo.jpg"); // Imagen de fondo del tablero
+    imagenPelota = loadImage("pelota.png"); // Imagen realista de pelota de tenis
+
+    // Cargar sonidos
+    sonidoRebote = loadSound("point.wav");
+    sonidoGol = loadSound("gol.wav");
 }
 
-function establecerDificultad(nivel) {
-  dificultad = nivel;
 
-  if (nivel === "facil") {
-    velocidadBasePelota = 4;
-    errorMin = 30;
-    errorMax = 60;
-  } else if (nivel === "medio") {
-    velocidadBasePelota = 5;
-    errorMin = 15;
-    errorMax = 40;
-  } else if (nivel === "dificil") {
-    velocidadBasePelota = 6;
-    errorMin = 5;
-    errorMax = 20;
-  }
+function establecerDificultad(nivel) {
+    dificultad = nivel;
+
+    if (nivel === "facil") {
+        velocidadBasePelota = 4;
+        errorMin = 30;
+        errorMax = 60;
+    } else if (nivel === "medio") {
+        velocidadBasePelota = 5;
+        errorMin = 15;
+        errorMax = 40;
+    } else if (nivel === "dificil") {
+        velocidadBasePelota = 6;
+        errorMin = 5;
+        errorMax = 20;
+    }
 
   // Reinicia pelota con la nueva velocidad
   velocidadPelotaX = velocidadBasePelota * (Math.random() < 0.5 ? -1 : 1);
@@ -71,54 +75,50 @@ function establecerDificultad(nivel) {
 }
 
 function setup() {
-  createCanvas(600, 400);
+    createCanvas(600, 400);
+    imageMode(CENTER);
     noLoop();
 }
 
 function draw() {
-    image(fondoCancha, 0, 0, width, height);
-
-    // Capa semitransparente para dar contraste
-    fill(0, 0, 0, 80); // negro con opacidad
+    image(fondoCancha, width / 2, height / 2, width, height); // Fondo cancha
+    fill(0, 0, 0, 80); // Capa oscura encima para contraste
     noStroke();
     rect(0, 0, width, height);
-    background(0);
 
-  if (enMenu) {
-    textSize(32);
-    fill(255);
-    textAlign(CENTER, CENTER);
-    text("Elige dificultad para comenzar:\n\n1 - Fácil\n2 - Medio\n3 - Difícil", width/2, height/2);
-  } else {
-    // Dibujo y lógica normal del juego
-    dibujarPelota();
-    moverPelota();
-    verificarBordes();
+    if (enMenu) {
+        textSize(32);
+        fill(255);
+        textAlign(CENTER, CENTER);
+        text("Elige dificultad para comenzar:\n\n1 - Fácil\n2 - Medio\n3 - Difícil", width/2, height/2);
+    } else {
+        // Dibujo y lógica normal del juego
+        dibujarPelota();
+        moverPelota();
+        verificarBordes();
+        dibujarRaquetas();
+        moverRaquetaJugador();
+        moverRaquetaCPU();
+        verificarColisionRaqueta(jugadorX, jugadorY);
+        verificarColisionRaqueta(cpuX, cpuY);
+        mostrarPuntuacion();
 
-    dibujarRaquetas();
-    moverRaquetaJugador();
-    moverRaquetaCPU();
-
-    verificarColisionRaqueta(jugadorX, jugadorY);
-    verificarColisionRaqueta(cpuX, cpuY);
-
-    mostrarPuntuacion();
-
-    if (juegoTerminado) {
-      fill(mensajeFinal === "¡Ganaste!" ? "lime" : "red");
-      textSize(48);
-      textAlign(CENTER, CENTER);
-      text(mensajeFinal, width / 2, height / 2);
-      textSize(20);
-      text("Presiona R para reiniciar", width / 2, height / 2 + 50);
-      noLoop();
+        if (juegoTerminado) {
+            fill(mensajeFinal === "¡Ganaste!" ? "lime" : "red");
+            textSize(48);
+            textAlign(CENTER, CENTER);
+            text(mensajeFinal, width / 2, height / 2);
+            textSize(20);
+            text("Presiona R para reiniciar", width / 2, height / 2 + 50);
+            noLoop();
+        }
     }
-  }
 }
 
 function dibujarPelota() {
-    image(imagenPelota, pelotaX - radio, pelotaY - radio, diametro, diametro);
+    image(imagenPelota, pelotaX, pelotaY, diametro, diametro);
 }
+
 
 function moverPelota() {
   pelotaX += velocidadPelotaX;
@@ -126,27 +126,27 @@ function moverPelota() {
 }
 
 function verificarBordes() {
-  if (pelotaY - radio < 0 || pelotaY + radio > height) {
-    velocidadPelotaY *= -1;
-  }
-
-  if (pelotaX - radio < 0) {
-    puntosCPU++;
-    if (sonidoGol && sonidoGol.isLoaded()) {
-      sonidoGol.play();
+    if (pelotaY - radio < 0 || pelotaY + radio > height) {
+        velocidadPelotaY *= -1;
     }
+
+    if (pelotaX - radio < 0) {
+        puntosCPU++;
+        if (sonidoGol && sonidoGol.isLoaded()) {
+        sonidoGol.play();
+        }
     reiniciarPelota();
-  }
-
-  if (pelotaX + radio > width) {
-    puntosJugador++;
-    if (sonidoGol && sonidoGol.isLoaded()) {
-      sonidoGol.play();
     }
+
+    if (pelotaX + radio > width) {
+        puntosJugador++;
+        if (sonidoGol && sonidoGol.isLoaded()) {
+        sonidoGol.play();
+        }
     mostrarGol = true;
     tiempoGol = millis();
     reiniciarPelota();
-  }
+    }
 
   // Verifica victoria o derrota
   if (puntosJugador >= 5) {
