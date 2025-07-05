@@ -69,6 +69,10 @@ Durante este proyecto aprendimos a:
 
 3. ¡Listo para jugar! 🎾
 
+O
+
+https://ea0627.github.io/juego_pong_chatgpt/
+
 ---
 
 ## 👨‍🏫 Créditos
